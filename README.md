@@ -13,6 +13,11 @@ state. Agent version **2.166.2**.
 > requires telling JumpCloud that this host is Fedora. That is a decision with
 > consequences for your vendor relationship, and it is off by default.
 
+Not yet on the AUR — new account registration is disabled there as of
+2026-09-06. Install from this repo with `makepkg -si`; see
+[AUR_RELEASE.md](AUR_RELEASE.md) for the publishing steps, ready to run when
+signups reopen.
+
 ## Install
 
 ```sh
