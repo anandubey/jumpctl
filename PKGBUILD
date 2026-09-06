@@ -70,13 +70,14 @@ source=("${pkgname}.install"
         'jumpctl-check.service'
         'jumpctl-check.timer'
         'pam-password-auth'
-        'pam-common-auth')
+        'pam-common-auth'
+        'os-release-compat')
 source_x86_64=("${pkgname}-${pkgver}-x86_64.rpm::${_cdn}/jcagent-linux-rpm-x86_64.rpm"
                "${pkgname}-${pkgver}-x86_64.rpm.sig::${_cdn}/jcagent-linux-rpm-x86_64.rpm.sig")
 source_aarch64=("${pkgname}-${pkgver}-aarch64.rpm::${_cdn}/jcagent-linux-rpm-aarch64.rpm"
                 "${pkgname}-${pkgver}-aarch64.rpm.sig::${_cdn}/jcagent-linux-rpm-aarch64.rpm.sig")
 
-sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
 sha256sums_x86_64=('73318daf1d4dc524ed03fd90639873a80bb12cd42efb4e9489d1b8a314ed009c'
                    'SKIP')
 # aarch64 is packaged but untested -- no arm64 host was available.
@@ -120,6 +121,12 @@ package() {
   install -Dm600 "${srcdir}/jumpcloud-agent-ca.crt" "${pkgdir}/opt/jc/ca.crt"
 
   install -Dm755 "${srcdir}/jumpctl" "${pkgdir}/usr/bin/jumpctl"
+
+  # Data file only -- inert until `jumpctl compat on` writes the systemd
+  # drop-in that binds it into the agent's mount namespace. Installing it does
+  # not change how this host identifies itself.
+  install -Dm644 "${srcdir}/os-release-compat" \
+    "${pkgdir}/usr/share/jumpcloud-agent/os-release-compat"
   # Ships disabled; Arch does not auto-enable units.
   install -Dm644 "${srcdir}/jumpctl-check.service" "${pkgdir}/usr/lib/systemd/system/jumpctl-check.service"
   install -Dm644 "${srcdir}/jumpctl-check.timer" "${pkgdir}/usr/lib/systemd/system/jumpctl-check.timer"

@@ -1,0 +1,27 @@
+# Presented to the JumpCloud agent *only*, via a systemd mount namespace.
+# Enable with `jumpctl compat on`; the rest of the system continues to read the
+# real /etc/os-release and is completely unaffected.
+#
+# Why this exists: JumpCloud's registration API gates on the OS string built
+# from "$NAME $VERSION". CachyOS yields "CachyOS Linux " (it ships no VERSION
+# field) and the server answers HTTP 400 -- no template ID, so the agent can
+# never finish registering. The same allowlist rejects it in kickstart/Detect.
+#
+# Fedora 42 is chosen because the agent's own embedded dependency manifest
+# lists it as supported, and because this package installs JumpCloud's rpm
+# payload -- so the rpm-side code paths the agent then selects are the ones
+# that actually match what is on disk. It also makes the agent emit RHEL-style
+# PAM references (password-auth), which the shims in this package resolve.
+NAME="Fedora Linux"
+VERSION="42 (Workstation Edition)"
+RELEASE_TYPE=stable
+ID=fedora
+VERSION_ID=42
+PLATFORM_ID="platform:f42"
+PRETTY_NAME="Fedora Linux 42 (Workstation Edition)"
+CPE_NAME="cpe:/o:fedoraproject:fedora:42"
+HOME_URL="https://fedoraproject.org/"
+SUPPORT_URL="https://ask.fedoraproject.org/"
+BUG_REPORT_URL="https://bugzilla.redhat.com/"
+VARIANT="Workstation Edition"
+VARIANT_ID=workstation

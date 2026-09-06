@@ -36,11 +36,21 @@ post_install() {
 
   JumpCloud agent installed but NOT enrolled. To enrol:
 
+      sudo jumpctl compat on     # required -- see below
       sudo jumpctl enroll
 
-  It prompts for the connect key (Admin Console > Devices > + > Linux) so the
-  key stays out of your shell history, then starts the agent.
-  Check state any time with:  jumpctl status
+  enroll prompts for the connect key (Admin Console > Devices > + > Linux) so
+  the key stays out of your shell history. Check state with: jumpctl status
+
+  Why 'compat on' is required: JumpCloud's registration API rejects Arch by
+  OS string (HTTP 400, no template ID), so the agent can never finish
+  registering and will crash-loop. 'compat on' shows the agent alone a
+  supported os-release via a systemd mount namespace; this system continues
+  to identify itself truthfully to everything else.
+
+  It is off by default and it is your decision: it tells JumpCloud something
+  untrue about this host, vendor support will decline to help, and any
+  software actions pushed from the console will target dnf and fail.
 
   Note: the bundled auto-updater is deliberately NOT installed -- it shells out
   to yum/apt and cannot work under pacman. Instead:
