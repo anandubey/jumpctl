@@ -1,0 +1,98 @@
+# The agent rewrites these in place once it enrols. Upstream's scriptlets stash a
+# .orig alongside each so the uninstall can put the system back; on Arch those
+# scriptlets bail out early, so it is done here.
+_jc_backups=(
+  /etc/ssh/sshd_config
+  /etc/pam.d/sshd
+  /etc/pam.d/gdm-password
+  /etc/pam.d/lightdm
+  /etc/pam.d/login
+  /etc/login.defs
+)
+
+_jc_backup() {
+  local f
+  for f in "${_jc_backups[@]}"; do
+    [ -e "$f" ] && cp -n "$f" "$f.orig"
+  done
+  return 0
+}
+
+_jc_restore() {
+  local f
+  for f in "${_jc_backups[@]}"; do
+    [ -e "$f.orig" ] && mv -f "$f.orig" "$f"
+    [ -e "$f.prev" ] && rm -f "$f.prev"
+  done
+  return 0
+}
+
+post_install() {
+  _jc_backup
+  chown -R root:root /opt/jc
+  chmod 700 /opt/jc
+
+  cat <<'EOF'
+
+  JumpCloud agent installed but NOT enrolled. To enrol:
+
+      sudo jumpctl enroll
+
+  It prompts for the connect key (Admin Console > Devices > + > Linux) so the
+  key stays out of your shell history, then starts the agent.
+  Check state any time with:  jumpctl status
+
+  Note: the bundled auto-updater is deliberately NOT installed -- it shells out
+  to yum/apt and cannot work under pacman. Instead:
+
+      sudo systemctl enable --now jumpctl-check.timer
+
+  /etc/pam.d/password-auth and /etc/pam.d/common-auth were installed as
+  compatibility shims onto system-auth; the agent only knows RHEL and Debian
+  PAM stack names. See the project README before editing them.
+
+EOF
+}
+
+post_upgrade() {
+  _jc_backup
+  chown -R root:root /opt/jc
+  chmod 700 /opt/jc
+  [ -e /opt/jc/agent.db ] && chmod 600 /opt/jc/agent.db
+  systemctl is-active --quiet jcagent && systemctl try-restart jcagent
+  return 0
+}
+
+pre_remove() {
+  systemctl disable --now jcagent 2>/dev/null
+  systemctl --global disable jumpcloud-user-agent 2>/dev/null
+  pkill -TERM -x 'agent-monitor|jumpcloud-agent|jumpcloud-user-agent' 2>/dev/null
+  return 0
+}
+
+post_remove() {
+  _jc_restore
+
+  # Runtime state pacman does not own: agent.db, jcagent.conf, agentBootstrap.json
+  # and the enrolled client keypair. Leaving these strands device credentials.
+  rm -rf /opt/jc /etc/ssh/jumpcloud_totp
+  rm -f /var/run/jcagent.pid /etc/init.d/jcagent
+  rm -f /etc/rsyslog.d/jumpcloud.conf
+  rm -f /etc/udev/rules.d/99-jumpcloud-deny-usb-storage.rules
+  rm -rf /etc/dconf/db/jumpcloud.d /etc/dconf/db/jumpcloud
+  find /etc/sudoers.d -name '00-*-jumpcloud' -type f -delete 2>/dev/null
+
+  command -v dconf >/dev/null && dconf update 2>/dev/null
+  systemctl is-active --quiet sshd && systemctl try-restart sshd
+
+  cat <<'EOF'
+
+  JumpCloud removed. If this device was enrolled, also delete it from the
+  JumpCloud Admin Console -- uninstalling locally does not deregister it.
+
+  Users JumpCloud provisioned on this host were NOT removed. Review with:
+      getent passwd | tail -n 20
+
+EOF
+  return 0
+}

@@ -1,0 +1,15 @@
+[Unit]
+Description=Check for JumpCloud agent updates
+Documentation=https://github.com/anandubey/jumpctl
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/jumpctl check
+# Read-only report, so it needs no privilege at all.
+DynamicUser=true
+NoNewPrivileges=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true

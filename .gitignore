@@ -1,0 +1,9 @@
+# build artefacts
+*.pkg.tar.*
+*.rpm
+*.rpm.sig
+src/
+pkg/
+
+# never commit a kickstart script; it embeds a connect key
+kickstart.sh

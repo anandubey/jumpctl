@@ -1,0 +1,13 @@
+#%PAM-1.0
+# Compatibility shim for the JumpCloud agent -- installed by jumpcloud-agent-bin.
+#
+# Debian-side counterpart to the password-auth shim. The agent classifies hosts
+# as Debian-like or RHEL-like from /etc/os-release; Arch is neither, so which
+# stack name it emits cannot be predicted statically. Both are provided so the
+# agent's PAM edits resolve either way.
+#
+# See pam-password-auth for the full rationale.
+auth      include   system-auth
+account   include   system-auth
+password  include   system-auth
+session   include   system-auth

@@ -1,0 +1,122 @@
+#!/bin/bash
+# jumpctl -- manage the JumpCloud agent on Arch.
+#
+# Covers the two things upstream's tooling cannot do here: enrolment (the
+# kickstart installer refuses to run on Arch) and update checking (the bundled
+# auto-updater drives yum/dnf/apt).
+set -euo pipefail
+
+readonly BOOTSTRAP=/opt/jc/agentBootstrap.json
+readonly GA_URL='https://cdn02.jumpcloud.com/production/jcagent-linux-rpm-x86_64.rpm'
+readonly PKG=jumpcloud-agent-bin
+
+die() { echo "jumpctl: $*" >&2; exit 1; }
+need_root() { [ "$(id -u)" -eq 0 ] || die "'$1' must run as root"; }
+
+installed_version() {
+  pacman -Q "$PKG" 2>/dev/null | awk '{print $2}' | cut -d- -f1
+}
+
+# Reads the version out of the RPM header. It sits in the first few KB, so a
+# range request settles this in ~16 KB rather than pulling the whole 36 MB.
+# grep -a keeps this working on binary data without needing binutils.
+ga_version() {
+  curl -sf --max-time 60 -r 0-16383 "$GA_URL" \
+    | grep -aoE 'jcagent-[0-9]+\.[0-9]+\.[0-9]+' \
+    | head -1 | cut -d- -f2
+}
+
+cmd_enroll() {
+  need_root enroll
+  [ -s "$BOOTSTRAP" ] && die "already enrolled ($BOOTSTRAP exists); remove it to re-enrol"
+
+  local key
+  # Prompted rather than taken as an argument, so the connect key stays out of
+  # shell history and the process list.
+  read -rsp 'JumpCloud connect key: ' key; echo
+  [ -n "$key" ] || die "no key given"
+
+  install -dm700 /opt/jc
+  ( umask 077
+    cat >"$BOOTSTRAP" <<EOF
+{
+  "publicKickstartUrl": "https://kickstart.jumpcloud.com",
+  "privateKickstartUrl": "https://private-kickstart.jumpcloud.com",
+  "connectKey": "$key"
+}
+EOF
+  )
+
+  systemctl enable --now jcagent
+  echo "Enrolment started. Watch it with: journalctl -fu jcagent"
+}
+
+cmd_check() {
+  local installed latest older
+  installed=$(installed_version) || true
+  [ -n "${installed:-}" ] || die "$PKG is not installed"
+
+  latest=$(ga_version) || true
+  [ -n "${latest:-}" ] || die "could not read upstream version from $GA_URL"
+
+  if [ "$installed" = "$latest" ]; then
+    echo "$PKG $installed is current."
+    return 0
+  fi
+
+  # sort -V so 2.166.2 vs 2.166.10 compares numerically, not lexically.
+  older=$(printf '%s\n%s\n' "$installed" "$latest" | sort -V | head -1)
+  if [ "$older" = "$installed" ]; then
+    echo "$PKG $installed is BEHIND upstream GA $latest."
+    echo "Update: bump pkgver to $latest, refresh sha256sums_x86_64, rebuild."
+  else
+    echo "$PKG $installed is ahead of GA $latest (staged build)."
+  fi
+}
+
+cmd_status() {
+  local pkg agent svc
+
+  # These commands print their answer AND exit non-zero when absent, so a
+  # `cmd || echo fallback` would emit both. Capture first, default if empty.
+  pkg=$(installed_version 2>/dev/null) || true
+  agent=$(cat /opt/jc/version.txt 2>/dev/null) || true
+  svc=$(systemctl is-active jcagent 2>/dev/null) || true
+
+  printf '%-12s %s\n' 'package:' "${pkg:-not installed}"
+  printf '%-12s %s\n' 'agent:'   "${agent:-unknown}"
+
+  if [ -s "$BOOTSTRAP" ]; then
+    printf '%-12s %s\n' 'enrolled:' 'yes'
+  else
+    printf '%-12s %s\n' 'enrolled:' "no (run 'sudo jumpctl enroll')"
+  fi
+
+  # The client certificate only exists once JumpCloud has signed the CSR, so it
+  # is the honest signal that enrolment actually completed.
+  if [ -e /opt/jc/client.crt ]; then
+    printf '%-12s %s\n' 'certificate:' 'present'
+  else
+    printf '%-12s %s\n' 'certificate:' 'none (not yet registered)'
+  fi
+
+  printf '%-12s %s\n' 'service:' "${svc:-unknown}"
+}
+
+usage() {
+  cat <<'EOF'
+jumpctl -- manage the JumpCloud agent on Arch
+
+  jumpctl enroll    Enrol this device (prompts for connect key, needs root)
+  jumpctl check     Report whether the agent is behind upstream GA
+  jumpctl status    Show package, enrolment and service state
+EOF
+}
+
+case "${1:-}" in
+  enroll) cmd_enroll ;;
+  check)  cmd_check ;;
+  status) cmd_status ;;
+  ''|-h|--help|help) usage ;;
+  *) usage >&2; exit 1 ;;
+esac
