@@ -75,10 +75,17 @@ source=("${pkgname}.install"
 # JumpCloud also publishes jcagent-linux-rpm-aarch64.rpm. It is not declared
 # here because it has never been built or run on this package's behalf; add
 # aarch64 to arch() with its own sums once someone verifies it on ARM.
-source_x86_64=("${pkgname}-${pkgver}-x86_64.rpm::${_cdn}/jcagent-linux-rpm-x86_64.rpm"
-               "${pkgname}-${pkgver}-x86_64.rpm.sig::${_cdn}/jcagent-linux-rpm-x86_64.rpm.sig")
+source_x86_64=("${pkgname}-${pkgver}-${CARCH}.rpm::${_cdn}/jcagent-linux-rpm-${CARCH}.rpm"
+               "${pkgname}-${pkgver}-${CARCH}.rpm.sig::${_cdn}/jcagent-linux-rpm-${CARCH}.rpm.sig")
 
-sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+sha256sums=('b20a3c4731fc408de43b309390affa35d603d3af3ebf86d0e3864a369f97d3de'
+            'c5275badd3aae960d5b608d258f285683b0a18549669ff2e736ce5f665f738ea'
+            '606c67ef6122f5c3b5bd15220b976281504e62de7c4275732960b64576b8725d'
+            '30527cfc429de5b777532075e1f8facffd723320f9a9096f11933f8ae0b46c50'
+            '54f7d0c1c40f5e1ef3c05f0f296899f60b6cb34d234a1bdb5f3140c6b73f0691'
+            'd7d841260d3917ac6e08e29904d1eaad8a0ff6bb6b22061da4324b76fca185d6'
+            '7f60c42c5a332fbea8ae2cecc7e7dd62eb57e33a7ab89ebb2b8a65954be3d496'
+            '3d1291b4e18ff7a1a7d9e6679f779cec15059454190ad30919e59dbf61b2a88e')
 sha256sums_x86_64=('73318daf1d4dc524ed03fd90639873a80bb12cd42efb4e9489d1b8a314ed009c'
                    'SKIP')
 
