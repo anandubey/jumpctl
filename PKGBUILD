@@ -1,4 +1,4 @@
-# Maintainer: Anand Dubey <anand.dubey@314ecorp.com>
+# Maintainer: Anand Dubey <dubey.anandkr@gmail.com>
 
 # Repackages JumpCloud's official signed RPM. Upstream ships no Arch package and
 # its installer cannot be used here, for two independent reasons:
@@ -16,7 +16,7 @@ pkgname=jumpcloud-agent-bin
 pkgver=2.166.2
 pkgrel=1
 pkgdesc='JumpCloud device management agent (repackaged upstream binary)'
-arch=('x86_64' 'aarch64')
+arch=('x86_64')
 url='https://github.com/anandubey/jumpctl'
 license=('LicenseRef-JumpCloud-Proprietary')
 
@@ -72,16 +72,15 @@ source=("${pkgname}.install"
         'pam-password-auth'
         'pam-common-auth'
         'os-release-compat')
+# JumpCloud also publishes jcagent-linux-rpm-aarch64.rpm. It is not declared
+# here because it has never been built or run on this package's behalf; add
+# aarch64 to arch() with its own sums once someone verifies it on ARM.
 source_x86_64=("${pkgname}-${pkgver}-x86_64.rpm::${_cdn}/jcagent-linux-rpm-x86_64.rpm"
                "${pkgname}-${pkgver}-x86_64.rpm.sig::${_cdn}/jcagent-linux-rpm-x86_64.rpm.sig")
-source_aarch64=("${pkgname}-${pkgver}-aarch64.rpm::${_cdn}/jcagent-linux-rpm-aarch64.rpm"
-                "${pkgname}-${pkgver}-aarch64.rpm.sig::${_cdn}/jcagent-linux-rpm-aarch64.rpm.sig")
 
 sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
 sha256sums_x86_64=('73318daf1d4dc524ed03fd90639873a80bb12cd42efb4e9489d1b8a314ed009c'
                    'SKIP')
-# aarch64 is packaged but untested -- no arm64 host was available.
-sha256sums_aarch64=('SKIP' 'SKIP')
 
 package() {
   # libarchive reads the RPM header as a filter and unpacks the cpio payload.

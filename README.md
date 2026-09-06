@@ -190,7 +190,9 @@ conflicts, all PAM modules resolve, unit enables and starts, the agent enrols,
 **completes registration**, posts system reports and holds steady state with
 zero restarts. Removal cleans up fully.
 
-**Not verified:** the `aarch64` build (no arm64 host was available).
+**x86_64 only.** JumpCloud does publish an ARM64 build, but this package does
+not declare `aarch64` because it has never been built or run on ARM. Add it once
+someone verifies it on real hardware.
 
 ## Licence
 

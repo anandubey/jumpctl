@@ -5,7 +5,6 @@ pkgbase = jumpcloud-agent-bin
 	url = https://github.com/anandubey/jumpctl
 	install = jumpcloud-agent-bin.install
 	arch = x86_64
-	arch = aarch64
 	license = LicenseRef-JumpCloud-Proprietary
 	depends = glibc
 	depends = pam
@@ -54,9 +53,5 @@ pkgbase = jumpcloud-agent-bin
 	source_x86_64 = jumpcloud-agent-bin-2.166.2-x86_64.rpm.sig::https://cdn02.jumpcloud.com/production/versions/2.166.2/jcagent-linux-rpm-x86_64.rpm.sig
 	sha256sums_x86_64 = 73318daf1d4dc524ed03fd90639873a80bb12cd42efb4e9489d1b8a314ed009c
 	sha256sums_x86_64 = SKIP
-	source_aarch64 = jumpcloud-agent-bin-2.166.2-aarch64.rpm::https://cdn02.jumpcloud.com/production/versions/2.166.2/jcagent-linux-rpm-aarch64.rpm
-	source_aarch64 = jumpcloud-agent-bin-2.166.2-aarch64.rpm.sig::https://cdn02.jumpcloud.com/production/versions/2.166.2/jcagent-linux-rpm-aarch64.rpm.sig
-	sha256sums_aarch64 = SKIP
-	sha256sums_aarch64 = SKIP
 
 pkgname = jumpcloud-agent-bin
